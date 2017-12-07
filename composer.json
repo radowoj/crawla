@@ -1,0 +1,22 @@
+{
+    "name": "radowoj/crawla",
+    "description": "Simple web crawler based on Symfony components and Guzzle",
+    "type": "library",
+    "autoload": {
+        "psr-4": {
+            "Radowoj\\Crawla\\": "src"
+        }
+    },
+    "require": {
+        "symfony/dom-crawler": "^4.0",
+        "symfony/css-selector": "^4.0",
+        "guzzlehttp/guzzle": "^6.3"
+    },
+    "license": "MIT",
+    "authors": [
+        {
+            "name": "radowoj",
+            "email": "radoslaw.wojtyczka@gmail.com"
+        }
+    ]
+}
