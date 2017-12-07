@@ -13,11 +13,15 @@ class Collection implements CollectionInterface
         $this->items = array_merge($itemsWithDepths, $this->items);
     }
 
-    public function all(int $depth = null)
+    public function all()
     {
-        return is_null($depth)
-            ? array_keys($this->items)
-            : array_keys($this->items, $depth);
+        return array_keys($this->items);
+    }
+
+
+    public function fromDepth(int $depth)
+    {
+        return array_keys($this->items, $depth);
     }
 
 

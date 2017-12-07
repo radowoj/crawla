@@ -24,14 +24,14 @@ class Crawler
 
 
     /**
-     * Array of already visited urls
+     * Collection of already visited urls
      * @var LinkCollection
      */
     protected $urlsVisited = null;
 
 
     /**
-     * Array of urls queued to visit
+     * Collection of urls queued to visit
      * @var LinkCollection
      */
     protected $urlsQueued = null;
@@ -50,13 +50,20 @@ class Crawler
 
 
     /**
+     * @var int
+     */
+    protected $maxDepth = self::INFINITE_DEPTH;
+
+
+    /**
      * Crawler constructor.
      * @param ClientInterface $client
      */
-    public function __construct(ClientInterface $client, string $baseUrl)
+    public function __construct(ClientInterface $client, string $baseUrl, string $linkSelector = 'a')
     {
         $this->client = $client;
         $this->baseUrl = $baseUrl;
+        $this->linkSelector = $linkSelector;
     }
 
 
@@ -90,10 +97,12 @@ class Crawler
     }
 
 
-    public function crawl(int $depth = self::INFINITE_DEPTH)
+    public function crawl(int $maxDepth = self::INFINITE_DEPTH)
     {
-        $this->getUrlsQueued()->append([$this->baseUrl], $depth);
+        $this->maxDepth = $maxDepth;
+        $this->getUrlsQueued()->append([$this->baseUrl], 0);
         $this->crawlPages();
+        return true;
     }
 
 
@@ -101,7 +110,7 @@ class Crawler
     protected function crawlPages()
     {
         while($page = $this->getUrlsQueued()->next()) {
-            if ($page['depth'] < 0 && $page['depth'] !== self::INFINITE_DEPTH) {
+            if ($this->maxDepth !== self::INFINITE_DEPTH && $page['depth'] > $this->maxDepth) {
                 continue;
             }
 
@@ -112,8 +121,8 @@ class Crawler
                 continue;
             }
 
-            $this->getUrlsVisited()->append([$page['url']]);
-            $this->parseForLinks($response, $page['url'], $page['depth'] - 1);
+            $this->getUrlsVisited()->append([$page['url']], $page['depth']);
+            $this->parseForLinks($response, $page['url'], $page['depth'] + 1);
         }
     }
 
