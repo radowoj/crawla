@@ -7,7 +7,6 @@ namespace Radowoj\Crawla;
 use GuzzleHttp\ClientInterface;
 use GuzzleHttp\Psr7\Response;
 use Radowoj\Crawla\Link\Collection as LinkCollection;
-use Radowoj\Crawla\Link\Link;
 
 class Crawler
 {
@@ -35,6 +34,13 @@ class Crawler
      * @var LinkCollection
      */
     protected $urlsQueued = null;
+
+
+    /**
+     * Collection of urls found, but too deep to visit
+     * @var LinkCollection
+     */
+    protected $urlsTooDeep = null;
 
 
     /**
@@ -87,6 +93,16 @@ class Crawler
     }
 
 
+    public function getUrlsTooDeep()
+    {
+        if (is_null($this->urlsTooDeep)) {
+            $this->urlsTooDeep = new LinkCollection();
+        }
+
+        return $this->urlsTooDeep;
+    }
+
+
     /**
      * Sets callback for checking if given url should be crawled
      * @param callable $urlConstraintCallback
@@ -111,6 +127,7 @@ class Crawler
     {
         while($page = $this->getUrlsQueued()->next()) {
             if ($this->maxDepth !== self::INFINITE_DEPTH && $page['depth'] > $this->maxDepth) {
+                $this->getUrlsTooDeep()->append([$page['url']], $page['depth']);
                 continue;
             }
 
