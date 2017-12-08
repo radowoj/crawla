@@ -25,7 +25,7 @@ class Collection implements CollectionInterface
     }
 
 
-    public function next() : array
+    public function shift() : array
     {
         if (!$this->items) {
             return [];
