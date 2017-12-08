@@ -8,6 +8,7 @@ use GuzzleHttp\Client;
 use GuzzleHttp\ClientInterface;
 use GuzzleHttp\Psr7\Response;
 use Radowoj\Crawla\Link\Collection as LinkCollection;
+use Symfony\Component\DomCrawler\Crawler as DomCrawler;
 
 class Crawler implements CrawlerInterface
 {
@@ -62,6 +63,12 @@ class Crawler implements CrawlerInterface
      * @var callable | null
      */
     protected $urlValidatorCallback = null;
+
+
+    /**
+     * @var callable | null
+     */
+    protected $pageVisitedCallback = null;
 
 
     /**
@@ -181,6 +188,17 @@ class Crawler implements CrawlerInterface
 
 
     /**
+     * @param callable $pageVisitedCallback
+     * @return CrawlerInterface
+     */
+    public function setPageVisitedCallback(callable $pageVisitedCallback): CrawlerInterface
+    {
+        $this->pageVisitedCallback = $pageVisitedCallback;
+        return $this;
+    }
+
+
+    /**
      * Start crawling
      * @param int $maxDepth - max visits depth
      * @return bool
@@ -211,48 +229,20 @@ class Crawler implements CrawlerInterface
             }
 
             $this->getVisited()->append([$page['url']], $page['depth']);
-            $this->parseForLinks($response, $page['url'], $page['depth'] + 1);
+
+            $domCrawler = new DomCrawler(
+                (string)$response->getBody(),
+                $page['url']
+            );
+
+            if (is_callable($this->pageVisitedCallback)) {
+                call_user_func($this->pageVisitedCallback, $domCrawler);
+            }
+
+            $urls = $this->getUrls($domCrawler);
+            $urls = $this->filterUrls($urls);
+            $this->queueUrls($page['depth'] + 1, $urls);
         }
-    }
-
-
-    /**
-     * Parses client response for new links to visit
-     * @param Response $response
-     * @param string $url current url
-     * @param int $depth current depth
-     */
-    protected function parseForLinks(Response $response, string $url, int $depth) : void
-    {
-        $domCrawler = new \Symfony\Component\DomCrawler\Crawler(
-            (string)$response->getBody(),
-            $url
-        );
-
-        $links = $domCrawler->filter($this->linkSelector)->links();
-
-        $urls = array_map(function ($link) {
-            $url = $link->getUri();
-            $url = explode('#', $url);
-            return $url[0];
-        }, $links);
-
-        $urls = array_unique($urls);
-
-        $urlConstraintCallback = is_callable($this->urlValidatorCallback)
-            ? $this->urlValidatorCallback
-            : [$this, 'isWithinBaseUrl'];
-
-        $urls = array_filter($urls, $urlConstraintCallback);
-
-        $this->getQueued()->append(
-            array_diff(
-                $urls,
-                $this->getQueued()->all(),
-                $this->getVisited()->all()
-            ),
-            $depth
-        );
     }
 
 
@@ -264,6 +254,57 @@ class Crawler implements CrawlerInterface
     protected function isWithinBaseUrl($url) : bool
     {
         return (strpos($url, $this->baseUrl) === 0);
+    }
+
+
+    /**
+     * @param DomCrawler $domCrawler
+     * @return array
+     */
+    protected function getUrls(DomCrawler $domCrawler): array
+    {
+        $links = $domCrawler->filter($this->linkSelector)->links();
+
+        $urls = array_map(function ($link) {
+            $url = $link->getUri();
+            $url = explode('#', $url);
+            return $url[0];
+        }, $links);
+
+        $urls = array_unique($urls);
+        return $urls;
+    }
+
+
+    /**
+     * @param array $urls
+     * @return array
+     */
+    protected function filterUrls(array $urls): array
+    {
+        $urlConstraintCallback = is_callable($this->urlValidatorCallback)
+            ? $this->urlValidatorCallback
+            : [$this, 'isWithinBaseUrl'];
+
+        $urls = array_filter($urls, $urlConstraintCallback);
+        return $urls;
+    }
+
+
+    /**
+     * @param int $depth
+     * @param array $urls
+     */
+    protected function queueUrls(int $depth, array $urls): void
+    {
+        $this->getQueued()->append(
+            array_diff(
+                $urls,
+                $this->getQueued()->all(),
+                $this->getVisited()->all()
+            ),
+            $depth
+        );
     }
 
 }
