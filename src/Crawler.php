@@ -6,7 +6,6 @@ namespace Radowoj\Crawla;
 
 use GuzzleHttp\Client;
 use GuzzleHttp\ClientInterface;
-use GuzzleHttp\Psr7\Response;
 use Radowoj\Crawla\Link\Collection as LinkCollection;
 use Symfony\Component\DomCrawler\Crawler as DomCrawler;
 
@@ -130,6 +129,28 @@ class Crawler implements CrawlerInterface
             $this->client = new Client();
         }
         return $this->client;
+    }
+
+
+    /**
+     * @param LinkCollection $visited
+     * @return Crawler
+     */
+    public function setVisited(LinkCollection $visited): CrawlerInterface
+    {
+        $this->visited = $visited;
+        return $this;
+    }
+
+
+    /**
+     * @param LinkCollection $queued
+     * @return Crawler
+     */
+    public function setQueued(LinkCollection $queued): CrawlerInterface
+    {
+        $this->queued = $queued;
+        return $this;
     }
 
 
