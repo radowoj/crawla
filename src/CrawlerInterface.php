@@ -7,6 +7,7 @@ namespace Radowoj\Crawla;
 
 use GuzzleHttp\ClientInterface;
 use Radowoj\Crawla\Link\Collection as LinkCollection;
+use Radowoj\Crawla\Link\CollectionInterface;
 
 interface CrawlerInterface
 {
@@ -22,17 +23,17 @@ interface CrawlerInterface
     public function setClient(ClientInterface $client): CrawlerInterface;
 
     /**
-     * @return LinkCollection
+     * @return CollectionInterface
      */
     public function getVisited();
 
     /**
-     * @return LinkCollection
+     * @return CollectionInterface
      */
     public function getQueued();
 
     /**
-     * @return LinkCollection
+     * @return CollectionInterface
      */
     public function getTooDeep();
 

@@ -18,5 +18,8 @@
             "name": "radowoj",
             "email": "radoslaw.wojtyczka@gmail.com"
         }
-    ]
+    ],
+    "require-dev": {
+        "phpunit/phpunit": "^6.5"
+    }
 }

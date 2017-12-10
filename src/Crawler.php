@@ -7,6 +7,7 @@ namespace Radowoj\Crawla;
 use GuzzleHttp\Client;
 use GuzzleHttp\ClientInterface;
 use Radowoj\Crawla\Link\Collection as LinkCollection;
+use Radowoj\Crawla\Link\CollectionInterface;
 use Symfony\Component\DomCrawler\Crawler as DomCrawler;
 
 class Crawler implements CrawlerInterface
@@ -33,21 +34,21 @@ class Crawler implements CrawlerInterface
 
     /**
      * Collection of already visited urls
-     * @var LinkCollection
+     * @var CollectionInterface
      */
     protected $visited = null;
 
 
     /**
      * Collection of urls queued to visit
-     * @var LinkCollection
+     * @var CollectionInterface
      */
     protected $queued = null;
 
 
     /**
      * Collection of urls found, but too deep to visit
-     * @var LinkCollection
+     * @var CollectionInterface
      */
     protected $urlsTooDeep = null;
 
@@ -133,10 +134,10 @@ class Crawler implements CrawlerInterface
 
 
     /**
-     * @param LinkCollection $visited
+     * @param CollectionInterface $visited
      * @return Crawler
      */
-    public function setVisited(LinkCollection $visited): CrawlerInterface
+    public function setVisited(CollectionInterface $visited): CrawlerInterface
     {
         $this->visited = $visited;
         return $this;
@@ -144,10 +145,10 @@ class Crawler implements CrawlerInterface
 
 
     /**
-     * @param LinkCollection $queued
+     * @param CollectionInterface $queued
      * @return Crawler
      */
-    public function setQueued(LinkCollection $queued): CrawlerInterface
+    public function setQueued(CollectionInterface $queued): CrawlerInterface
     {
         $this->queued = $queued;
         return $this;
@@ -156,7 +157,7 @@ class Crawler implements CrawlerInterface
 
     /**
      * Returns visited links collection (creates empty if not set)
-     * @return LinkCollection
+     * @return CollectionInterface
      */
     public function getVisited()
     {
@@ -170,7 +171,7 @@ class Crawler implements CrawlerInterface
 
     /**
      * Returns queued links collection (creates empty if not set)
-     * @return LinkCollection
+     * @return CollectionInterface
      */
     public function getQueued()
     {
@@ -184,7 +185,7 @@ class Crawler implements CrawlerInterface
 
     /**
      * Returns too deep to visit links collection (creates empty if not set)
-     * @return LinkCollection
+     * @return CollectionInterface
      */
     public function getTooDeep()
     {
