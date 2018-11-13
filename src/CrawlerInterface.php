@@ -1,51 +1,54 @@
 <?php
-/**
- * @author Radosław Wojtyczka <radoslaw.wojtyczka@gmail.com>
- */
+
+declare(strict_types=1);
 
 namespace Radowoj\Crawla;
 
 use GuzzleHttp\ClientInterface;
-use Radowoj\Crawla\Link\Collection as LinkCollection;
 use Radowoj\Crawla\Link\CollectionInterface;
 
 interface CrawlerInterface
 {
     /**
      * @param string $linkSelector
-     * @return \Radowoj\Crawla\CrawlerInterface
+     *
+     * @return CrawlerInterface
      */
-    public function setLinkSelector(string $linkSelector): CrawlerInterface;
+    public function setLinkSelector(string $linkSelector): self;
 
     /**
      * @param ClientInterface $client
+     *
+     * @return CrawlerInterface
      */
-    public function setClient(ClientInterface $client): CrawlerInterface;
+    public function setClient(ClientInterface $client): self;
 
     /**
      * @return CollectionInterface
      */
-    public function getVisited();
+    public function getVisited(): CollectionInterface;
 
     /**
      * @return CollectionInterface
      */
-    public function getQueued();
+    public function getQueued(): CollectionInterface;
 
     /**
      * @return CollectionInterface
      */
-    public function getTooDeep();
+    public function getTooDeep(): CollectionInterface;
 
     /**
      * @param callable $urlValidatorCallback
-     * @return \Radowoj\Crawla\CrawlerInterface
+     *
+     * @return CrawlerInterface
      */
-    public function setUrlValidatorCallback(callable $urlValidatorCallback): CrawlerInterface;
+    public function setUrlValidatorCallback(callable $urlValidatorCallback): self;
 
     /**
-     * @param int $maxDepth - max visits depth
-     * @return bool
+     * @param int $maxDepth
+     *
+     * @return mixed
      */
-    public function crawl(int $maxDepth = self::DEPTH_DEFAULT);
+    public function crawl(int $maxDepth = Crawler::DEPTH_DEFAULT);
 }
