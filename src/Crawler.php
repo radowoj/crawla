@@ -8,7 +8,6 @@ use GuzzleHttp\Client;
 use GuzzleHttp\ClientInterface;
 use Radowoj\Crawla\Link\Collection as LinkCollection;
 use Radowoj\Crawla\Link\CollectionInterface;
-use Radowoj\Crawla\Link\Link;
 use Symfony\Component\DomCrawler\Crawler as DomCrawler;
 
 class Crawler implements CrawlerInterface
@@ -35,21 +34,21 @@ class Crawler implements CrawlerInterface
      *
      * @var CollectionInterface
      */
-    protected $visited = null;
+    protected $linksVisited = null;
 
     /**
      * Collection of urls queued to visit.
      *
      * @var CollectionInterface
      */
-    protected $queued = null;
+    protected $linksQueued = null;
 
     /**
      * Collection of urls found, but too deep to visit.
      *
      * @var CollectionInterface
      */
-    protected $urlsTooDeep = null;
+    protected $linksTooDeep = null;
 
     /**
      * @var string
@@ -79,6 +78,9 @@ class Crawler implements CrawlerInterface
     public function __construct(string $baseUrl)
     {
         $this->baseUrl = $baseUrl;
+        $this->linksVisited = new LinkCollection();
+        $this->linksQueued = new LinkCollection();
+        $this->linksTooDeep = new LinkCollection();
     }
 
     /**
@@ -109,6 +111,7 @@ class Crawler implements CrawlerInterface
      * Injects HTTP client (custom configured Guzzle client for example).
      *
      * @param ClientInterface $client
+     * @return CrawlerInterface
      */
     public function setClient(ClientInterface $client): CrawlerInterface
     {
@@ -132,25 +135,25 @@ class Crawler implements CrawlerInterface
     }
 
     /**
-     * @param CollectionInterface $visited
+     * @param CollectionInterface $linksVisited
      *
      * @return Crawler
      */
-    public function setVisited(CollectionInterface $visited): CrawlerInterface
+    public function setVisited(CollectionInterface $linksVisited): CrawlerInterface
     {
-        $this->visited = $visited;
+        $this->linksVisited = $linksVisited;
 
         return $this;
     }
 
     /**
-     * @param CollectionInterface $queued
+     * @param CollectionInterface $linksQueued
      *
      * @return Crawler
      */
-    public function setQueued(CollectionInterface $queued): CrawlerInterface
+    public function setQueued(CollectionInterface $linksQueued): CrawlerInterface
     {
-        $this->queued = $queued;
+        $this->linksQueued = $linksQueued;
 
         return $this;
     }
@@ -162,11 +165,7 @@ class Crawler implements CrawlerInterface
      */
     public function getVisited(): CollectionInterface
     {
-        if (null === $this->visited) {
-            $this->visited = new LinkCollection();
-        }
-
-        return $this->visited;
+        return $this->linksVisited;
     }
 
     /**
@@ -176,11 +175,7 @@ class Crawler implements CrawlerInterface
      */
     public function getQueued(): CollectionInterface
     {
-        if (null === $this->queued) {
-            $this->queued = new LinkCollection();
-        }
-
-        return $this->queued;
+        return $this->linksQueued;
     }
 
     /**
@@ -190,11 +185,7 @@ class Crawler implements CrawlerInterface
      */
     public function getTooDeep(): CollectionInterface
     {
-        if (null === $this->urlsTooDeep) {
-            $this->urlsTooDeep = new LinkCollection();
-        }
-
-        return $this->urlsTooDeep;
+        return $this->linksTooDeep;
     }
 
     /**
