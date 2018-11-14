@@ -6,23 +6,15 @@ namespace Radowoj\Crawla\Link;
 
 interface CollectionInterface
 {
-    public function push(string $url, int $depth = 0): self;
+    public function push(Link $link): self;
 
-    public function append(array $urls, int $depth = 0): self;
-
-    public function pushElement(array $element);
+    public function appendMany(array $urls, int $depth = 0): self;
 
     public function all();
 
-    public function shift(): array;
+    public function shift(): ?Link;
 
     public function count();
 
     public function toArray();
-
-    public function fromArray(array $sourceArray);
-
-    public function toAssoc();
-
-    public function fromAssoc(array $sourceAssoc);
 }

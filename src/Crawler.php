@@ -8,6 +8,7 @@ use GuzzleHttp\Client;
 use GuzzleHttp\ClientInterface;
 use Radowoj\Crawla\Link\Collection as LinkCollection;
 use Radowoj\Crawla\Link\CollectionInterface;
+use Radowoj\Crawla\Link\Link;
 use Symfony\Component\DomCrawler\Crawler as DomCrawler;
 
 class Crawler implements CrawlerInterface
@@ -159,7 +160,7 @@ class Crawler implements CrawlerInterface
      *
      * @return CollectionInterface
      */
-    public function getVisited()
+    public function getVisited(): CollectionInterface
     {
         if (null === $this->visited) {
             $this->visited = new LinkCollection();
@@ -173,7 +174,7 @@ class Crawler implements CrawlerInterface
      *
      * @return CollectionInterface
      */
-    public function getQueued()
+    public function getQueued(): CollectionInterface
     {
         if (null === $this->queued) {
             $this->queued = new LinkCollection();
@@ -187,7 +188,7 @@ class Crawler implements CrawlerInterface
      *
      * @return CollectionInterface
      */
-    public function getTooDeep()
+    public function getTooDeep(): CollectionInterface
     {
         if (null === $this->urlsTooDeep) {
             $this->urlsTooDeep = new LinkCollection();
@@ -232,7 +233,7 @@ class Crawler implements CrawlerInterface
     public function crawl(int $maxDepth = self::DEPTH_DEFAULT)
     {
         $this->maxDepth = $maxDepth;
-        $this->getQueued()->append([$this->baseUrl], 0);
+        $this->getQueued()->appendMany([$this->baseUrl], 0);
         $this->crawlPages();
 
         return true;
@@ -243,22 +244,22 @@ class Crawler implements CrawlerInterface
      */
     protected function crawlPages()
     {
-        while ($page = $this->getQueued()->shift()) {
-            if (self::DEPTH_INFINITE !== $this->maxDepth && $page['depth'] > $this->maxDepth) {
-                $this->getTooDeep()->append([$page['url']], $page['depth']);
+        while ($link = $this->getQueued()->shift()) {
+            if (self::DEPTH_INFINITE !== $this->maxDepth && $link->getDepth() > $this->maxDepth) {
+                $this->getTooDeep()->push($link);
                 continue;
             }
 
-            $response = $this->getClient()->request('GET', $page['url']);
+            $response = $this->getClient()->request('GET', $link->getUrl());
             if (200 !== $response->getStatusCode()) {
                 continue;
             }
 
-            $this->getVisited()->append([$page['url']], $page['depth']);
+            $this->getVisited()->push($link);
 
             $domCrawler = new DomCrawler(
                 (string) $response->getBody(),
-                $page['url']
+                $link->getUrl()
             );
 
             if (\is_callable($this->pageVisitedCallback)) {
@@ -267,7 +268,7 @@ class Crawler implements CrawlerInterface
 
             $urls = $this->getUrls($domCrawler);
             $urls = $this->filterUrls($urls);
-            $this->queueUrls($page['depth'] + 1, $urls);
+            $this->queueUrls($link->getDepth() + 1, $urls);
         }
     }
 
@@ -326,7 +327,7 @@ class Crawler implements CrawlerInterface
      */
     protected function queueUrls(int $depth, array $urls): void
     {
-        $this->getQueued()->append(
+        $this->getQueued()->appendMany(
             array_diff(
                 $urls,
                 $this->getQueued()->all(),
