@@ -37,4 +37,12 @@ class LinkTest extends TestCase
         new Link('definately not an url address');
     }
 
+    /**
+     * @expectedException \InvalidArgumentException
+     */
+    public function testDepthMustBeNonNegative()
+    {
+        new Link(self::TEST_URL, -1);
+    }
+
 }

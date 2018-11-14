@@ -29,6 +29,10 @@ class Link
         if (!filter_var($url, FILTER_VALIDATE_URL)) {
             throw new InvalidUrlException("Provided URL is invalid: {$url}");
         }
+
+        if ($depth < 0) {
+            throw new \InvalidArgumentException("Provided depth must be non negative");
+        }
         $this->url = $url;
         $this->depth = $depth;
     }

@@ -8,14 +8,9 @@ use Countable;
 use InvalidArgumentException;
 use Radowoj\Crawla\Exception\InvalidUrlException;
 
-/**
- * Class Collection.
- */
+
 class Collection implements Countable, CollectionInterface
 {
-    const ELEMENT_URL_KEY = 'url';
-    const ELEMENT_DEPTH_KEY = 'depth';
-
     /**
      * Items stored in this collection
      * array keys - urls
@@ -28,17 +23,20 @@ class Collection implements Countable, CollectionInterface
     /**
      * Collection constructor.
      *
-     * @param array $sourceArray
+     * @param array $sourceArray [url => depth]
      */
     public function __construct(array $sourceArray = [])
     {
         $this->items = [];
         foreach ($sourceArray as $url => $depth) {
-            if (!\is_string($url) || !\is_int($depth)) {
-                throw new InvalidArgumentException('Source array must consist of url (string) => depth (int) key-value pairs');
+            if (!\is_string($url)) {
+                throw new InvalidArgumentException("Source array key must be a string (url)");
+            }
+            if (!\is_int($depth) || $depth < 0) {
+                throw new InvalidArgumentException('Source array value must be a non-negative int (depth)');
             }
 
-            if (!filter_var($url, FILTER_VALIDATE_URL)) {
+            if (!\filter_var($url, FILTER_VALIDATE_URL)) {
                 throw new InvalidUrlException("Provided URL is invalid: {$url}");
             }
         }
