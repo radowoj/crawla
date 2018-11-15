@@ -111,6 +111,7 @@ class Crawler implements CrawlerInterface
      * Injects HTTP client (custom configured Guzzle client for example).
      *
      * @param ClientInterface $client
+     *
      * @return CrawlerInterface
      */
     public function setClient(ClientInterface $client): CrawlerInterface
@@ -224,7 +225,7 @@ class Crawler implements CrawlerInterface
     public function crawl(int $maxDepth = self::DEPTH_DEFAULT)
     {
         $this->maxDepth = $maxDepth;
-        $this->getQueued()->appendMany([$this->baseUrl], 0);
+        $this->getQueued()->appendUrlsAtDepth([$this->baseUrl], 0);
         $this->crawlPages();
 
         return true;
@@ -318,7 +319,7 @@ class Crawler implements CrawlerInterface
      */
     protected function queueUrls(int $depth, array $urls): void
     {
-        $this->getQueued()->appendMany(
+        $this->getQueued()->appendUrlsAtDepth(
             array_diff(
                 $urls,
                 $this->getQueued()->all(),

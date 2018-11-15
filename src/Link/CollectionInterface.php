@@ -8,7 +8,7 @@ interface CollectionInterface
 {
     public function push(Link $link): self;
 
-    public function appendMany(array $urls, int $depth = 0): self;
+    public function appendUrlsAtDepth(array $urls, int $depth = 0): self;
 
     public function all();
 

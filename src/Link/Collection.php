@@ -8,7 +8,6 @@ use Countable;
 use InvalidArgumentException;
 use Radowoj\Crawla\Exception\InvalidUrlException;
 
-
 class Collection implements Countable, CollectionInterface
 {
     /**
@@ -28,19 +27,7 @@ class Collection implements Countable, CollectionInterface
     public function __construct(array $sourceArray = [])
     {
         $this->items = [];
-        foreach ($sourceArray as $url => $depth) {
-            if (!\is_string($url)) {
-                throw new InvalidArgumentException("Source array key must be a string (url)");
-            }
-            if (!\is_int($depth) || $depth < 0) {
-                throw new InvalidArgumentException('Source array value must be a non-negative int (depth)');
-            }
-
-            if (!\filter_var($url, FILTER_VALIDATE_URL)) {
-                throw new InvalidUrlException("Provided URL is invalid: {$url}");
-            }
-        }
-        $this->items = $sourceArray;
+        $this->appendArray($sourceArray);
 
         return $this;
     }
@@ -63,10 +50,10 @@ class Collection implements Countable, CollectionInterface
      *
      * @return CollectionInterface
      */
-    public function appendMany(array $urls, int $depth = 0): CollectionInterface
+    public function appendUrlsAtDepth(array $urls, int $depth = 0): CollectionInterface
     {
-        $itemsWithDepths = array_fill_keys($urls, $depth);
-        $this->items = array_merge($itemsWithDepths, $this->items);
+        $sourceArray = array_fill_keys($urls, $depth);
+        $this->appendArray($sourceArray);
 
         return $this;
     }
@@ -113,5 +100,25 @@ class Collection implements Countable, CollectionInterface
     public function toArray(): array
     {
         return $this->items;
+    }
+
+    /**
+     * @param array $sourceArray
+     */
+    private function appendArray(array $sourceArray): void
+    {
+        foreach ($sourceArray as $url => $depth) {
+            if (!\is_string($url)) {
+                throw new InvalidArgumentException('Source array key must be a string (url)');
+            }
+            if (!\is_int($depth) || $depth < 0) {
+                throw new InvalidArgumentException('Source array value must be a non-negative int (depth)');
+            }
+
+            if (!\filter_var($url, FILTER_VALIDATE_URL)) {
+                throw new InvalidUrlException("Provided URL is invalid: {$url}");
+            }
+        }
+        $this->items = array_merge($sourceArray, $this->items);
     }
 }

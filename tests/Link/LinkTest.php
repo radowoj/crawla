@@ -1,8 +1,8 @@
 <?php
 
+declare(strict_types=1);
 
 namespace Radowoj\Crawla\Tests\Link;
-
 
 use PHPUnit\Framework\TestCase;
 use Radowoj\Crawla\Link\Link;
@@ -44,5 +44,4 @@ class LinkTest extends TestCase
     {
         new Link(self::TEST_URL, -1);
     }
-
 }

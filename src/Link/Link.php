@@ -31,7 +31,7 @@ class Link
         }
 
         if ($depth < 0) {
-            throw new \InvalidArgumentException("Provided depth must be non negative");
+            throw new \InvalidArgumentException('Provided depth must be non negative');
         }
         $this->url = $url;
         $this->depth = $depth;
