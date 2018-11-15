@@ -1,0 +1,46 @@
+<?php
+$fileHeaderComment = <<<COMMENT
+This file is part of the Symfony package.
+(c) Fabien Potencier <fabien@symfony.com>
+For the full copyright and license information, please view the LICENSE
+file that was distributed with this source code.
+COMMENT;
+$finder = PhpCsFixer\Finder::create()
+    ->in(__DIR__)
+    ->exclude('config')
+    ->exclude('var')
+    ->exclude('public/bundles')
+    ->exclude('public/build')
+    ->exclude('assets')
+    ->exclude('templates')
+    ->exclude('translations')
+    ->exclude('node_modules')
+;
+return PhpCsFixer\Config::create()
+    ->setRiskyAllowed(true)
+    ->setRules([
+        '@Symfony' => true,
+        '@Symfony:risky' => true,
+        'array_syntax' => ['syntax' => 'short'],
+        'linebreak_after_opening_tag' => true,
+        'mb_str_functions' => true,
+        'no_php4_constructor' => true,
+        'no_unreachable_default_argument_value' => true,
+        'no_useless_else' => true,
+        'no_useless_return' => true,
+        'no_unused_imports' => true,
+        'ordered_imports' => true,
+        'phpdoc_order' => true,
+        'semicolon_after_instruction' => true,
+        'strict_comparison' => true,
+        'strict_param' => true,
+        'blank_line_before_return' => true,
+        'single_blank_line_at_eof' => true,
+        'blank_line_after_namespace' => true,
+        'no_extra_consecutive_blank_lines' => [ "curly_brace_block", "extra", "parenthesis_brace_block", "square_brace_block", "throw", "use" ],
+        'yoda_style' => true,
+        'declare_strict_types' => true,
+    ])
+    ->setFinder($finder)
+    ->setCacheFile(__DIR__.'/var/.php_cs.cache')
+;

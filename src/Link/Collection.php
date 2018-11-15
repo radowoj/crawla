@@ -1,52 +1,124 @@
 <?php
 
+declare(strict_types=1);
+
 namespace Radowoj\Crawla\Link;
 
+use Countable;
+use InvalidArgumentException;
+use Radowoj\Crawla\Exception\InvalidUrlException;
 
-class Collection implements CollectionInterface
+class Collection implements Countable, CollectionInterface
 {
+    /**
+     * Items stored in this collection
+     * array keys - urls
+     * array values - depths.
+     *
+     * @var array
+     */
     protected $items = [];
 
-    public function append(array $urls, int $depth = 0)
+    /**
+     * Collection constructor.
+     *
+     * @param array $sourceArray [url => depth]
+     */
+    public function __construct(array $sourceArray = [])
     {
-        $itemsWithDepths = array_fill_keys($urls, $depth);
-        $this->items = array_merge($itemsWithDepths, $this->items);
+        $this->items = [];
+        $this->appendArray($sourceArray);
+
+        return $this;
     }
 
-    public function all()
+    /**
+     * @param Link $link
+     *
+     * @return CollectionInterface
+     */
+    public function push(Link $link): CollectionInterface
     {
-        return array_keys($this->items);
+        $this->items[$link->getUrl()] = $link->getDepth();
+
+        return $this;
     }
 
-
-    public function fromDepth(int $depth)
+    /**
+     * @param array $urls
+     * @param int   $depth
+     *
+     * @return CollectionInterface
+     */
+    public function appendUrlsAtDepth(array $urls, int $depth = 0): CollectionInterface
     {
-        return array_keys($this->items, $depth);
+        $sourceArray = array_fill_keys($urls, $depth);
+        $this->appendArray($sourceArray);
+
+        return $this;
     }
 
+    /**
+     * @param int|null $depth
+     *
+     * @return array
+     */
+    public function all(int $depth = null): array
+    {
+        return null === $depth
+            ? array_keys($this->items)
+            : array_keys($this->items, $depth, true);
+    }
 
-    public function shift() : array
+    /**
+     * @return null|Link
+     */
+    public function shift(): ?Link
     {
         if (!$this->items) {
-            return [];
+            return null;
         }
-
 
         $depth = reset($this->items);
         $url = key($this->items);
         unset($this->items[$url]);
 
-        return [
-            'url' => $url,
-            'depth' => $depth,
-        ];
+        return new Link($url, $depth);
     }
 
-
-    public function count()
+    /**
+     * @return int
+     */
+    public function count(): int
     {
-        return count($this->items);
+        return \count($this->items);
     }
 
+    /**
+     * @return array
+     */
+    public function toArray(): array
+    {
+        return $this->items;
+    }
 
+    /**
+     * @param array $sourceArray
+     */
+    private function appendArray(array $sourceArray): void
+    {
+        foreach ($sourceArray as $url => $depth) {
+            if (!\is_string($url)) {
+                throw new InvalidArgumentException('Source array key must be a string (url)');
+            }
+            if (!\is_int($depth) || $depth < 0) {
+                throw new InvalidArgumentException('Source array value must be a non-negative int (depth)');
+            }
+
+            if (!\filter_var($url, FILTER_VALIDATE_URL)) {
+                throw new InvalidUrlException("Provided URL is invalid: {$url}");
+            }
+        }
+        $this->items = array_merge($sourceArray, $this->items);
+    }
 }
