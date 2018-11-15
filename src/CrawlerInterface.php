@@ -1,7 +1,5 @@
 <?php
 
-declare(strict_types=1);
-
 namespace Radowoj\Crawla;
 
 use GuzzleHttp\ClientInterface;
@@ -10,45 +8,94 @@ use Radowoj\Crawla\Link\CollectionInterface;
 interface CrawlerInterface
 {
     /**
+     * Gets current link selector.
+     *
+     * @return string
+     */
+    public function getLinkSelector(): string;
+
+    /**
+     * Sets CSS selector for links that crawler should follow.
+     *
      * @param string $linkSelector
      *
-     * @return CrawlerInterface
+     * @return \Radowoj\Crawla\CrawlerInterface
      */
-    public function setLinkSelector(string $linkSelector): self;
+    public function setLinkSelector(string $linkSelector): CrawlerInterface;
 
     /**
+     * Injects HTTP client (custom configured Guzzle client for example).
+     *
      * @param ClientInterface $client
      *
-     * @return CrawlerInterface
+     * @return \Radowoj\Crawla\CrawlerInterface
      */
-    public function setClient(ClientInterface $client): self;
+    public function setClient(ClientInterface $client): CrawlerInterface;
 
     /**
+     * Returns client instance (creates new default Guzzle Client, if client has not been set previously).
+     *
+     * @return ClientInterface
+     */
+    public function getClient();
+
+    /**
+     * @param CollectionInterface $linksVisited
+     *
+     * @return Crawler
+     */
+    public function setVisited(CollectionInterface $linksVisited): CrawlerInterface;
+
+    /**
+     * @param CollectionInterface $linksQueued
+     *
+     * @return Crawler
+     */
+    public function setQueued(CollectionInterface $linksQueued): CrawlerInterface;
+
+    /**
+     * Returns visited links collection (creates empty if not set).
+     *
      * @return CollectionInterface
      */
     public function getVisited(): CollectionInterface;
 
     /**
+     * Returns queued links collection (creates empty if not set).
+     *
      * @return CollectionInterface
      */
     public function getQueued(): CollectionInterface;
 
     /**
+     * Returns too deep to visit links collection (creates empty if not set).
+     *
      * @return CollectionInterface
      */
     public function getTooDeep(): CollectionInterface;
 
     /**
+     * Sets callback that will be called when discovering a link (to determine if it should be queued for visiting).
+     *
      * @param callable $urlValidatorCallback
      *
-     * @return CrawlerInterface
+     * @return \Radowoj\Crawla\CrawlerInterface
      */
-    public function setUrlValidatorCallback(callable $urlValidatorCallback): self;
+    public function setUrlValidatorCallback(callable $urlValidatorCallback): CrawlerInterface;
 
     /**
-     * @param int $maxDepth
+     * @param callable $pageVisitedCallback
      *
-     * @return mixed
+     * @return \Radowoj\Crawla\CrawlerInterface
      */
-    public function crawl(int $maxDepth = Crawler::DEPTH_DEFAULT);
+    public function setPageVisitedCallback(callable $pageVisitedCallback): CrawlerInterface;
+
+    /**
+     * Start crawling.
+     *
+     * @param int $maxDepth - max visits depth
+     *
+     * @return bool
+     */
+    public function crawl(int $maxDepth = self::DEPTH_DEFAULT);
 }
