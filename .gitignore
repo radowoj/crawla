@@ -1,4 +1,5 @@
 vendor
 var
 .idea
+.phpunit.result.cache
 coverage

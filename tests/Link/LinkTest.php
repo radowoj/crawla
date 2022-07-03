@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace Radowoj\Crawla\Tests\Link;
 
 use PHPUnit\Framework\TestCase;
+use Radowoj\Crawla\Exception\InvalidUrlException;
 use Radowoj\Crawla\Link\Link;
 
 class LinkTest extends TestCase
@@ -29,19 +30,15 @@ class LinkTest extends TestCase
         $this->assertSame(self::TEST_URL, $link->getUrl());
     }
 
-    /**
-     * @expectedException \Radowoj\Crawla\Exception\InvalidUrlException
-     */
     public function testUrlValidation()
     {
+        $this->expectException(InvalidUrlException::class);
         new Link('definately not an url address');
     }
 
-    /**
-     * @expectedException \InvalidArgumentException
-     */
     public function testDepthMustBeNonNegative()
     {
+        $this->expectException(\InvalidArgumentException::class);
         new Link(self::TEST_URL, -1);
     }
 }

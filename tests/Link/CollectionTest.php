@@ -5,19 +5,20 @@ declare(strict_types=1);
 namespace Radowoj\Crawla\Tests\Link;
 
 use PHPUnit\Framework\TestCase;
+use Radowoj\Crawla\Exception\InvalidUrlException;
 use Radowoj\Crawla\Link\Collection;
 use Radowoj\Crawla\Link\Link;
 
 class CollectionTest extends TestCase
 {
-    public function testCreateInstance()
+    public function testCreateInstance(): void
     {
         $collection = new Collection();
         $this->assertInstanceOf(Collection::class, $collection);
         $this->assertEmpty($collection->toArray());
     }
 
-    public function testCreateFromArray()
+    public function testCreateFromArray(): void
     {
         $array = [
             'https://github.com' => 0,
@@ -27,47 +28,39 @@ class CollectionTest extends TestCase
         $this->assertSame($array, $collection->toArray());
     }
 
-    /**
-     * @expectedException \Radowoj\Crawla\Exception\InvalidUrlException
-     */
-    public function testCreateFromArrayFailsOnInvalidUrl()
+    public function testCreateFromArrayFailsOnInvalidUrl(): void
     {
+        $this->expectException(InvalidUrlException::class);
         new Collection([
             'definately not an url address' => 0,
         ]);
     }
 
-    /**
-     * @expectedException \InvalidArgumentException
-     */
-    public function testCreateFromArrayFailsOnNonStringUrl()
+    public function testCreateFromArrayFailsOnNonStringUrl(): void
     {
+        $this->expectException(\InvalidArgumentException::class);
         new Collection([
             0 => 0,
         ]);
     }
 
-    /**
-     * @expectedException \InvalidArgumentException
-     */
-    public function testCreateFromArrayFailsOnNonIntDepth()
+    public function testCreateFromArrayFailsOnNonIntDepth(): void
     {
+        $this->expectException(\InvalidArgumentException::class);
         new Collection([
             'https://github.com' => 1.2,
         ]);
     }
 
-    /**
-     * @expectedException \InvalidArgumentException
-     */
-    public function testCreateFromArrayFailsOnNegativeDepth()
+    public function testCreateFromArrayFailsOnNegativeDepth(): void
     {
+        $this->expectException(\InvalidArgumentException::class);
         new Collection([
             'https://github.com' => -1,
         ]);
     }
 
-    public function testPushingSingleLinkToCollection()
+    public function testPushingSingleLinkToCollection(): void
     {
         $link0 = new Link('https://github.com', 0);
         $link1 = new Link('https://github.com/radowoj', 1);
@@ -85,7 +78,7 @@ class CollectionTest extends TestCase
         $this->assertArraySubset([$link2->getUrl() => $link2->getDepth()], $collection->toArray());
     }
 
-    public function testAppendingMultipleUrlsAtGivenDepth()
+    public function testAppendingMultipleUrlsAtGivenDepth(): void
     {
         $link0 = new Link('https://github.com', 0);
         $link1 = new Link('https://github.com/radowoj', 1);
@@ -103,7 +96,7 @@ class CollectionTest extends TestCase
         $this->assertArraySubset([$link3->getUrl() => $link3->getDepth()], $collection->toArray());
     }
 
-    public function testGettingAllLinks()
+    public function testGettingAllLinks(): void
     {
         $linkAtDepth0 = new Link('https://github.com', 0);
         $linkAtDepth1 = new Link('https://github.com/radowoj', 1);
@@ -123,7 +116,7 @@ class CollectionTest extends TestCase
         $this->assertContains($linkAtDepth1->getUrl(), $collection->all($linkAtDepth1->getDepth()));
     }
 
-    public function testShiftFirstElementFromCollection()
+    public function testShiftFirstElementFromCollection(): void
     {
         $linkAtDepth0 = new Link('https://github.com', 0);
         $linkAtDepth1 = new Link('https://github.com/radowoj', 1);
@@ -137,7 +130,7 @@ class CollectionTest extends TestCase
         $this->assertNull($collection->shift());
     }
 
-    public function testCount()
+    public function testCount(): void
     {
         $linkAtDepth0 = new Link('https://github.com', 0);
         $linkAtDepth1 = new Link('https://github.com/radowoj', 1);
@@ -148,5 +141,15 @@ class CollectionTest extends TestCase
 
         $collection->push($linkAtDepth1);
         $this->assertSame(2, $collection->count());
+    }
+
+    public function assertArraySubset(array $needle, array $haystack): void
+    {
+        $keys = array_keys($needle);
+        foreach($keys as $key) {
+            $this->assertArrayHasKey($key, $haystack);
+            $this->assertSame($needle[$key], $haystack[$key]);
+        }
+
     }
 }
