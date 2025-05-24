@@ -5,11 +5,24 @@ filter:
 build:
     environment:
         php:
-            version: 8.1
+            version: 8.2
+            ini:
+                "xdebug.mode": coverage
+    dependencies:
+        override:
+            - composer install --no-interaction --prefer-dist
+    nodes:
+        analysis:
+            dependencies:
+                before:
+                    - composer require --dev squizlabs/php_codesniffer:^3.7.1
+            tests:
+                override:
+                    - php-scrutinizer-run
     tests:
         override:
             -
-                command: 'vendor/bin/phpunit --coverage-clover=some-file'
+                command: 'XDEBUG_MODE=coverage vendor/bin/phpunit --coverage-clover=some-file'
                 coverage:
                     file: 'some-file'
                     format: 'clover'
