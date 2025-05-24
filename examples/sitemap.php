@@ -5,18 +5,14 @@ declare(strict_types=1);
 require_once '../vendor/autoload.php';
 
 $crawler = new \Radowoj\Crawla\Crawler(
-    'https://developer.github.com/'
+    'https://docs.github.com/',
+    new \Symfony\Component\HttpClient\CurlHttpClient(),
 );
 
 $dataGathered = [];
 
-//configure our crawler
-$crawler->setClient(new GuzzleHttp\Client([
-    GuzzleHttp\RequestOptions::DELAY => 100,
-]))
-
-    //set link selector (all links - this is the default value)
-    ->setLinkSelector('a');
+//set link selector (all links - this is the default value)
+$crawler->setLinkSelector('a');
 
 //check up to 1 levels deep
 $crawler->crawl(1);

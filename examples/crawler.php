@@ -7,21 +7,16 @@ use Symfony\Component\DomCrawler\Crawler as DomCrawler;
 require_once '../vendor/autoload.php';
 
 $crawler = new \Radowoj\Crawla\Crawler(
-    'https://github.com/radowoj'
+    'https://github.com/radowoj',
+    new \Symfony\Component\HttpClient\CurlHttpClient(),
 );
 
 $dataGathered = [];
 
 //configure our crawler
 //first - set CSS selector for links that should be visited
-$crawler->setLinkSelector('span.pinned-repo-item-content span.d-block a.text-bold')
-
-    //second - customize guzzle client used for requests
-    ->setClient(new GuzzleHttp\Client([
-        GuzzleHttp\RequestOptions::DELAY => 100,
-    ]))
-
-    //third - define what should be done, when a page was visited?
+$crawler->setLinkSelector('.pinned-item-list-item-content a.Link')
+    //second - define what should be done, when a page was visited?
     ->setPageVisitedCallback(function (DomCrawler $domCrawler) use (&$dataGathered) {
         //callback will be called for every visited page, including the base url, so let's ensure that
         //repo data will be gathered only on repo pages
@@ -29,11 +24,10 @@ $crawler->setLinkSelector('span.pinned-repo-item-content span.d-block a.text-bol
             return;
         }
 
-        $readme = $domCrawler->filter('#readme');
+        $readme = $domCrawler->filter('article.markdown-body');
 
         $dataGathered[] = [
-            'title' => trim($domCrawler->filter('span[itemprop="about"]')->text()),
-            'commits' => trim($domCrawler->filter('li.commits span.num')->text()),
+            'title' => trim($domCrawler->filter('p.f4.my-3')->text()),
             'readme' => $readme->count() ? trim($readme->text()) : '',
         ];
     });
