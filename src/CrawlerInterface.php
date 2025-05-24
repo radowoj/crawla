@@ -24,22 +24,6 @@ interface CrawlerInterface
     public function setLinkSelector(string $linkSelector): CrawlerInterface;
 
     /**
-     * Injects HTTP client (custom configured Guzzle client for example).
-     *
-     * @param ClientInterface $client
-     *
-     * @return \Radowoj\Crawla\CrawlerInterface
-     */
-    public function setClient(ClientInterface $client): CrawlerInterface;
-
-    /**
-     * Returns client instance (creates new default Guzzle Client, if client has not been set previously).
-     *
-     * @return ClientInterface
-     */
-    public function getClient();
-
-    /**
      * @param CollectionInterface $linksVisited
      *
      * @return Crawler

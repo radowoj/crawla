@@ -4,102 +4,38 @@ declare(strict_types=1);
 
 namespace Radowoj\Crawla;
 
-use GuzzleHttp\Client;
-use GuzzleHttp\ClientInterface;
 use Radowoj\Crawla\Link\Collection as LinkCollection;
 use Radowoj\Crawla\Link\CollectionInterface;
 use Symfony\Component\DomCrawler\Crawler as DomCrawler;
+use Symfony\Contracts\HttpClient\HttpClientInterface;
 
-class Crawler implements CrawlerInterface
+final class Crawler implements CrawlerInterface
 {
-    /**
-     * Constants for typical depths of crawling.
-     */
-    const DEPTH_ONLY_TARGET = 0;
-    const DEPTH_DEFAULT = 2;
-    const DEPTH_INFINITE = -100;
+    public const DEPTH_ONLY_TARGET = 0;
+    public const DEPTH_DEFAULT = 2;
+    public const DEPTH_INFINITE = -100;
 
-    /**
-     * @var ClientInterface
-     */
-    protected $client = null;
+    private string $linkSelector = 'a';
+    /** @var callable|null  */
+    private $urlValidatorCallback = null;
+    /** @var callable|null  */
+    private $pageVisitedCallback = null;
+    private int $maxDepth = self::DEPTH_INFINITE;
 
-    /**
-     * @var string
-     */
-    protected $linkSelector = 'a';
-
-    /**
-     * Collection of already visited urls.
-     *
-     * @var CollectionInterface
-     */
-    protected $linksVisited = null;
-
-    /**
-     * Collection of urls queued to visit.
-     *
-     * @var CollectionInterface
-     */
-    protected $linksQueued = null;
-
-    /**
-     * Collection of urls found, but too deep to visit.
-     *
-     * @var CollectionInterface
-     */
-    protected $linksTooDeep = null;
-
-    /**
-     * @var string
-     */
-    protected $baseUrl = '';
-
-    /**
-     * @var callable | null
-     */
-    protected $urlValidatorCallback = null;
-
-    /**
-     * @var callable | null
-     */
-    protected $pageVisitedCallback = null;
-
-    /**
-     * @var int
-     */
-    protected $maxDepth = self::DEPTH_INFINITE;
-
-    /**
-     * Crawler constructor.
-     *
-     * @param string $baseUrl
-     */
-    public function __construct(string $baseUrl)
-    {
-        $this->baseUrl = $baseUrl;
-        $this->linksVisited = new LinkCollection();
-        $this->linksQueued = new LinkCollection();
-        $this->linksTooDeep = new LinkCollection();
+    public function __construct(
+        private string $baseUrl,
+        private HttpClientInterface $client,
+        private CollectionInterface $linksVisited = new LinkCollection(),
+        private CollectionInterface $linksQueued = new LinkCollection(),
+        private CollectionInterface $linksTooDeep = new LinkCollection(),
+    ) {
     }
 
-    /**
-     * Gets current link selector.
-     *
-     * @return string
-     */
     public function getLinkSelector(): string
     {
         return $this->linkSelector;
     }
 
-    /**
-     * Sets CSS selector for links that crawler should follow.
-     *
-     * @param string $linkSelector
-     *
-     * @return CrawlerInterface
-     */
     public function setLinkSelector(string $linkSelector): CrawlerInterface
     {
         $this->linkSelector = $linkSelector;
@@ -107,39 +43,6 @@ class Crawler implements CrawlerInterface
         return $this;
     }
 
-    /**
-     * Injects HTTP client (custom configured Guzzle client for example).
-     *
-     * @param ClientInterface $client
-     *
-     * @return CrawlerInterface
-     */
-    public function setClient(ClientInterface $client): CrawlerInterface
-    {
-        $this->client = $client;
-
-        return $this;
-    }
-
-    /**
-     * Returns client instance (creates new default Guzzle Client, if client has not been set previously).
-     *
-     * @return ClientInterface
-     */
-    public function getClient()
-    {
-        if (!$this->client instanceof ClientInterface) {
-            $this->client = new Client();
-        }
-
-        return $this->client;
-    }
-
-    /**
-     * @param CollectionInterface $linksVisited
-     *
-     * @return Crawler
-     */
     public function setVisited(CollectionInterface $linksVisited): CrawlerInterface
     {
         $this->linksVisited = $linksVisited;
@@ -147,11 +50,6 @@ class Crawler implements CrawlerInterface
         return $this;
     }
 
-    /**
-     * @param CollectionInterface $linksQueued
-     *
-     * @return Crawler
-     */
     public function setQueued(CollectionInterface $linksQueued): CrawlerInterface
     {
         $this->linksQueued = $linksQueued;
@@ -159,43 +57,21 @@ class Crawler implements CrawlerInterface
         return $this;
     }
 
-    /**
-     * Returns visited links collection (creates empty if not set).
-     *
-     * @return CollectionInterface
-     */
     public function getVisited(): CollectionInterface
     {
         return $this->linksVisited;
     }
 
-    /**
-     * Returns queued links collection (creates empty if not set).
-     *
-     * @return CollectionInterface
-     */
     public function getQueued(): CollectionInterface
     {
         return $this->linksQueued;
     }
 
-    /**
-     * Returns too deep to visit links collection (creates empty if not set).
-     *
-     * @return CollectionInterface
-     */
     public function getTooDeep(): CollectionInterface
     {
         return $this->linksTooDeep;
     }
 
-    /**
-     * Sets callback that will be called when discovering a link (to determine if it should be queued for visiting).
-     *
-     * @param callable $urlValidatorCallback
-     *
-     * @return CrawlerInterface
-     */
     public function setUrlValidatorCallback(callable $urlValidatorCallback): CrawlerInterface
     {
         $this->urlValidatorCallback = $urlValidatorCallback;
@@ -203,11 +79,6 @@ class Crawler implements CrawlerInterface
         return $this;
     }
 
-    /**
-     * @param callable $pageVisitedCallback
-     *
-     * @return CrawlerInterface
-     */
     public function setPageVisitedCallback(callable $pageVisitedCallback): CrawlerInterface
     {
         $this->pageVisitedCallback = $pageVisitedCallback;
@@ -215,26 +86,14 @@ class Crawler implements CrawlerInterface
         return $this;
     }
 
-    /**
-     * Start crawling.
-     *
-     * @param int $maxDepth - max visits depth
-     *
-     * @return bool
-     */
-    public function crawl(int $maxDepth = self::DEPTH_DEFAULT)
+    public function crawl(int $maxDepth = self::DEPTH_DEFAULT): void
     {
         $this->maxDepth = $maxDepth;
         $this->getQueued()->appendUrlsAtDepth([$this->baseUrl], 0);
         $this->crawlPages();
-
-        return true;
     }
 
-    /**
-     * @throws \GuzzleHttp\Exception\GuzzleException
-     */
-    protected function crawlPages()
+    private function crawlPages(): void
     {
         while ($link = $this->getQueued()->shift()) {
             if (self::DEPTH_INFINITE !== $this->maxDepth && $link->getDepth() > $this->maxDepth) {
@@ -242,7 +101,7 @@ class Crawler implements CrawlerInterface
                 continue;
             }
 
-            $response = $this->getClient()->request('GET', $link->getUrl());
+            $response = $this->client->request('GET', $link->getUrl());
             if (200 !== $response->getStatusCode()) {
                 continue;
             }
@@ -250,7 +109,7 @@ class Crawler implements CrawlerInterface
             $this->getVisited()->push($link);
 
             $domCrawler = new DomCrawler(
-                (string) $response->getBody(),
+                (string) $response->getContent(),
                 $link->getUrl()
             );
 
@@ -264,24 +123,12 @@ class Crawler implements CrawlerInterface
         }
     }
 
-    /**
-     * Default url validator.
-     *
-     * @param $url
-     *
-     * @return bool
-     */
-    protected function isWithinBaseUrl($url): bool
+    private function isWithinBaseUrl($url): bool
     {
         return 0 === mb_strpos($url, $this->baseUrl);
     }
 
-    /**
-     * @param DomCrawler $domCrawler
-     *
-     * @return array
-     */
-    protected function getUrls(DomCrawler $domCrawler): array
+    private function getUrls(DomCrawler $domCrawler): array
     {
         $links = $domCrawler->filter($this->linkSelector)->links();
 
@@ -292,32 +139,19 @@ class Crawler implements CrawlerInterface
             return $url[0];
         }, $links);
 
-        $urls = array_unique($urls);
-
-        return $urls;
+        return array_unique($urls);
     }
 
-    /**
-     * @param array $urls
-     *
-     * @return array
-     */
-    protected function filterUrls(array $urls): array
+    private function filterUrls(array $urls): array
     {
         $urlConstraintCallback = \is_callable($this->urlValidatorCallback)
             ? $this->urlValidatorCallback
-            : [$this, 'isWithinBaseUrl'];
+            : $this->isWithinBaseUrl(...);
 
-        $urls = array_filter($urls, $urlConstraintCallback);
-
-        return $urls;
+        return array_filter($urls, $urlConstraintCallback);
     }
 
-    /**
-     * @param int   $depth
-     * @param array $urls
-     */
-    protected function queueUrls(int $depth, array $urls): void
+    private function queueUrls(int $depth, array $urls): void
     {
         $this->getQueued()->appendUrlsAtDepth(
             array_diff(
